@@ -47,44 +47,27 @@ class ComparatorApp(App):
             self.texts = temp_data.texts
             if self.texts == None:raise Exception("Нет результатов сравнения,пожалуйста сначала запустите сравнение")
             self.texts_list = GridLayout()
-            self.texts_list.cols = 3
+            self.texts_list.cols = 5
             self.texts_list.size_hint=(1, None)
             self.texts_list.height = self.texts_list.minimum_height
 
-            for item in self.texts:
-                
-                if item['coef'] < 50 and item['coef'] > 10:r_color = "yellow"
-                elif item['coef'] < 99 and item['coef'] > 50:r_color = "orange"
-                elif item['coef'] > 99:r_color = "red"
-                else:r_color = "green"
+            for items in self.texts:
+                match items['coef']:
+                    case _ if items['coef'] <= 10:r_color = "green"
+                    case _ if items['coef'] <= 50:r_color = "yellow"
+                    case _ if items['coef'] <= 99:r_color = "orange"
+                    case _ if items['coef'] >= 99:r_color = "red"
 
-                self.var1 = TextInput(text = f"{item['name']}")
-                self.var1.size_hint=(0.4, None)
-                self.var1.halign = "center"
-                self.var1.padding_y = [self.var1.height / 2.0 - (self.var1.line_height / 2.0) * len(self.var1._lines), 0]
-                self.var1.background_color = r_color
-                self.var1.font_size = 24
+                for item in items.values():
+                    elem = TextInput(text = f"{item}")
+                    elem.size_hint=(0.2, None)
+                    elem.halign = "center"
+                    elem.background_color = r_color
+                    elem.font_size = 16
+                    elem.padding_y = [elem.height / 2.0 - (elem.line_height / 2.0) * len(elem._lines), 0]
+                    self.texts_list.height += elem.height/len(items.values())
+                    self.texts_list.add_widget(elem)
 
-                self.var2 = TextInput(text = f"{item['pair']}")
-                self.var2.size_hint=(0.4, None)
-                self.var2.halign = "center"
-                self.var2.padding_y = [self.var2.height / 2.0 - (self.var2.line_height / 2.0) * len(self.var2._lines), 0]
-                self.var2.background_color = r_color
-                self.var2.font_size = 24
-
-                self.var3 = TextInput(text = f"{round(item['coef'],2)}%")
-                self.var3.size_hint=(0.2, None)
-                self.var3.halign = "center"
-                self.var3.padding_y = [self.var3.height / 2.0 - (self.var3.line_height / 2.0) * len(self.var3._lines), 0]
-                self.var3.background_color = r_color
-                self.var3.font_size = 24
-
-                self.texts_list.height += self.var1.height
-                self.texts_list.add_widget(self.var1)
-                self.texts_list.add_widget(self.var2)
-                self.texts_list.add_widget(self.var3)
-                    
-            
             self.Result = ScrollView()
             self.Result.do_scroll_x = False
             self.Result.do_scroll_y = True
@@ -95,11 +78,19 @@ class ComparatorApp(App):
             self.Explanation.background_color = "white"
             self.Explanation.size_hint_y = .1
 
+            self.column_def = GridLayout()
+            self.column_def.cols = 5
+            self.column_def.size_hint=(1, None)
+            self.column_def.height = 30
+            definitons = ["Дата создания","Дата изменения","Первый фаил","Второй фаил","Схожесть в %"]
+            for _def in definitons:self.column_def.add_widget(TextInput(text = f"{_def}"))
+
             self.mB.remove_widget(self.ch_ipath_btn)
             self.mB.remove_widget(self.compare_btn)
             self.mB.remove_widget(self.render_compare_btn)
 
             self.mB.add_widget(self.Explanation)
+            self.mB.add_widget(self.column_def)
             self.mB.add_widget(self.Result)
             Window.size = (800,800)
         except Exception as ex:
@@ -115,7 +106,6 @@ class ComparatorApp(App):
         self.chosen_path = Label(text = "",color = "yellow")
         self.chosen_path.size_hint_y = .1
         
-
         self.compare_btn = Button(text = "Начать сравнение",on_press = self.do_compare)
         self.compare_btn.size_hint_y = .1
 
