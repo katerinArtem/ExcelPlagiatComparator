@@ -2,12 +2,10 @@ from pandas import read_excel
 import os
 from pathlib import Path
 import comparator
-from datetime import datetime,timedelta
-import threading
-import asyncio
+from datetime import datetime
 import temp_data
 
-def CMP(source_dir:str,log_func = None):
+def CMP(source_dir:str,log_func):
     ##"""to do закэтчить ошибку неудаётся нати указаный путь когда просто закрываешь окошко"""
         log_func("Сканирование файлов...")
         
@@ -27,18 +25,17 @@ def CMP(source_dir:str,log_func = None):
         for filename in filenames:
             if ".xls" not in filename and ".xlsx" not in filename:continue 
             text = str(read_excel(Path(source_dir, filename),sheet_name=None).values())
+            creation = datetime.fromtimestamp(os.path.getctime(Path(source_dir, filename))).strftime('%d-%m-%Y %H:%M:%S') 
+            update = datetime.fromtimestamp(os.path.getmtime(Path(source_dir, filename))).strftime('%d-%m-%Y %H:%M:%S') 
             coef = -1
             pair = {}
-            texts.update({filename:{"text":text,"coef":coef,"pair":pair}})
+            texts.update({filename:{"text":text,"coef":coef,"pair":pair,"creation":creation,"update":update}})
 
-            if log_func != None:
-                    log_str = f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" 
-                    log_func(log_str)
-                    cur+=1
+            log_func(f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" )
+            cur+=1
+                
 
-        if log_func != None:
-            log_str = f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" 
-            log_func(log_str)
+        log_func(f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" )
         
 
         if len(texts) == 0:
@@ -60,31 +57,17 @@ def CMP(source_dir:str,log_func = None):
                     texts[name2]["coef"] = coef
                     texts[name2]["pair"] = name1
 
-                if log_func != None:
-                    log_str = f"Сравнение файлов - прогресс {round(100*cur/last,1)}%" 
-                    log_func(log_str)
-                    cur+=1
-
-        if log_func != None:
-            log_str = f"Сравнение файлов - прогресс {round(100*cur/last,1)}%" 
-            log_func(log_str)
-            
+                log_func(f"Сравнение файлов - прогресс {round(100*cur/last,1)}%" )
+                cur+=1
+                
         log_func("Сравнение прошло успешно")
-        
-        temp_data.texts = [{"name":it,"coef":texts[it]["coef"],"pair":texts[it]["pair"]} for it in texts]
+        temp_data.texts = [
+            {
+                "creation":texts[text]["creation"],
+                "update":texts[text]["update"],
+                "name":text,
+                "pair":texts[text]["pair"],
+                "coef":round(texts[text]["coef"],2)
+                } for text in texts]
 
     
-        
-
-
- 
-
-
-
-
-
-
-
-
-
-
