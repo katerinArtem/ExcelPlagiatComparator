@@ -16,6 +16,7 @@ import temp_data
 
 
 class ComparatorApp(App):
+    freez_log = False
     log_info = StringProperty("info")
     path = ""
     texts = None
@@ -32,8 +33,11 @@ class ComparatorApp(App):
         return path
 
     def do_compare(self,instance):
-        def inline_foo(text): 
-            self.log_info = text
+        def inline_foo(text,freez = False): 
+            if freez:
+                self.log_info = text
+                self.freez_log = True
+            self.log_info = self.log_info if self.freez_log else text
         try:
             if self.chosen_path.text == "":
                 raise Exception("Не выбрана папка с файлами")
