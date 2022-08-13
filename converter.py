@@ -1,4 +1,6 @@
 from pandas import read_excel
+from docx import Document
+import pdfminer.high_level
 import os
 from pathlib import Path
 import comparator
@@ -6,7 +8,7 @@ from datetime import datetime
 import temp_data
 
 def CMP(source_dir:str,log_func):
-    ##"""to do закэтчить ошибку неудаётся нати указаный путь когда просто закрываешь окошко"""
+    try:
         log_func("Сканирование файлов...")
         
         texts = {}
@@ -23,21 +25,25 @@ def CMP(source_dir:str,log_func):
         last = len(filenames)
 
         for filename in filenames:
-            if ".xls" not in filename and ".xlsx" not in filename:continue 
-            text = str(read_excel(Path(source_dir, filename),sheet_name=None).values())
+            if ".pdf" in filename:
+                try:text = pdfminer.high_level.extract_text("C:/Users/kaspersky/Desktop/cpm/source/test.pdf")
+                except Exception as ex:log_func(f"Произошла ошибка во время чтения файла:\n{filename} \nerror:{str(ex)}",True)
+            elif ".docx" in filename:
+                try:text = " ".join([para.text for para in Document(Path(source_dir, filename)).paragraphs])
+                except Exception as ex:log_func(f"Произошла ошибка во время чтения файла:\n{filename} \nerror:{str(ex)}",True)
+            elif ".xls" in filename:
+                try:text = str(read_excel(Path(source_dir, filename),sheet_name=None).values())
+                except Exception as ex:log_func(f"Произошла ошибка во время чтения файла:\n{filename} \nerror:{str(ex)}",True)
+            else:
+                continue
             creation = datetime.fromtimestamp(os.path.getctime(Path(source_dir, filename))).strftime('%d-%m-%Y %H:%M:%S') 
-            update = datetime.fromtimestamp(os.path.getmtime(Path(source_dir, filename))).strftime('%d-%m-%Y %H:%M:%S') 
-            coef = -1
-            pair = {}
-            texts.update({filename:{"text":text,"coef":coef,"pair":pair,"creation":creation,"update":update}})
-
+            update = datetime.fromtimestamp(os.path.getmtime(Path(source_dir, filename))).strftime('%d-%m-%Y %H:%M:%S')
+            texts.update({filename:{"text":text,"coef":-1,"pair":{},"creation":creation,"update":update}})
             log_func(f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" )
             cur+=1
                 
-
         log_func(f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" )
         
-
         if len(texts) == 0:
             log_func("В выбранной папке отсутствуют файлы расширения .xls или xlsx")
             return None
@@ -69,5 +75,7 @@ def CMP(source_dir:str,log_func):
                 "pair":texts[text]["pair"],
                 "coef":round(texts[text]["coef"],2)
                 } for text in texts]
+    except Exception as ex:
+        log_func(f"Произошла ошибка во время конвертирования:\nerror:{str(ex)}",True)
 
     
