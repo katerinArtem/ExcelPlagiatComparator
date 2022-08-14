@@ -9,7 +9,7 @@ import temp_data
 
 def CMP(source_dir:str,log_func):
     try:
-        log_func("Сканирование файлов...")
+        log_func("Сканирование файлов...",True)
         
         texts = {}
         filenames = os.listdir(source_dir)
@@ -25,31 +25,34 @@ def CMP(source_dir:str,log_func):
         last = len(filenames)
 
         for filename in filenames:
-            if ".pdf" in filename:
-                try:text = pdfminer.high_level.extract_text("C:/Users/kaspersky/Desktop/cpm/source/test.pdf")
-                except Exception as ex:log_func(f"Произошла ошибка во время чтения файла:\n{filename} \nerror:{str(ex)}",True)
-            elif ".docx" in filename:
-                try:text = " ".join([para.text for para in Document(Path(source_dir, filename)).paragraphs])
-                except Exception as ex:log_func(f"Произошла ошибка во время чтения файла:\n{filename} \nerror:{str(ex)}",True)
-            elif ".xls" in filename:
-                try:text = str(read_excel(Path(source_dir, filename),sheet_name=None).values())
-                except Exception as ex:log_func(f"Произошла ошибка во время чтения файла:\n{filename} \nerror:{str(ex)}",True)
-            else:
+            try:
+                if ".pdf" in filename:text = pdfminer.high_level.extract_text("C:/Users/kaspersky/Desktop/cpm/source/test.pdf")
+                elif ".docx" in filename:text = " ".join([para.text for para in Document(Path(source_dir, filename)).paragraphs])
+                elif ".xls" in filename:text = str(read_excel(Path(source_dir, filename),sheet_name=None).values())
+                else:continue
+            except Exception as ex:
+                log_func(f"Произошла ошибка во время чтения файла:\n{filename} \n error:{str(ex)}",True)
                 continue
+
             creation = datetime.fromtimestamp(os.path.getctime(Path(source_dir, filename))).strftime('%d-%m-%Y %H:%M:%S') 
             update = datetime.fromtimestamp(os.path.getmtime(Path(source_dir, filename))).strftime('%d-%m-%Y %H:%M:%S')
             texts.update({filename:{"text":text,"coef":-1,"pair":{},"creation":creation,"update":update}})
             log_func(f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" )
             cur+=1
                 
+
         log_func(f"Сканирование файлов - прогресс {round(100*cur/last,1)}%" )
         
         if len(texts) == 0:
             log_func("В выбранной папке отсутствуют файлы расширения .xls или xlsx")
             return None
 
+        log_func("Сканирование файлов завершено",True)
+
         cur = 0
         last = (len(texts)-1)*len(texts)/2
+
+        log_func("Сравнение файлов ...",True)
 
         texts_t = list(texts.keys())
         for name1 in texts:
@@ -66,7 +69,7 @@ def CMP(source_dir:str,log_func):
                 log_func(f"Сравнение файлов - прогресс {round(100*cur/last,1)}%" )
                 cur+=1
                 
-        log_func("Сравнение прошло успешно")
+        log_func("Сравнение файлов завершено")
         temp_data.texts = [
             {
                 "creation":texts[text]["creation"],
