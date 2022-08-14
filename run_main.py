@@ -3,6 +3,7 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 import tkinter as tk
@@ -16,7 +17,7 @@ import temp_data
 
 
 class ComparatorApp(App):
-    freez_log = False
+    fixed_log_info = ""
     log_info = StringProperty("info")
     path = ""
     texts = None
@@ -34,10 +35,8 @@ class ComparatorApp(App):
 
     def do_compare(self,instance):
         def inline_foo(text,freez = False): 
-            if freez:
-                self.log_info = text
-                self.freez_log = True
-            self.log_info = self.log_info if self.freez_log else text
+            if freez:self.fixed_log_info += "+  " + text + "\n"
+            self.log_info =  self.fixed_log_info  + "+  " + text + "\n"
         try:
             if self.chosen_path.text == "":
                 raise Exception("Не выбрана папка с файлами")
@@ -102,23 +101,27 @@ class ComparatorApp(App):
         
 
     def build(self):
-        Window.size = (500,300)
+        Window.size = (600,400)
         self.mB = GridLayout(cols = 1)
         self.ch_ipath_btn = Button(text = "Выбрать папку с файлами",on_press = self.ch_ipath)
-        self.ch_ipath_btn.size_hint_y = .1
+        self.ch_ipath_btn.size_hint_y = .2
 
         self.chosen_path = Label(text = "",color = "yellow")
-        self.chosen_path.size_hint_y = .1
+        self.chosen_path.size_hint_y = .2
         
         self.compare_btn = Button(text = "Начать сравнение",on_press = self.do_compare)
-        self.compare_btn.size_hint_y = .1
+        self.compare_btn.size_hint_y = .2
 
         self.render_compare_btn = Button(text = "Показать сравнение",on_press = self.render_compare)
-        self.render_compare_btn.size_hint_y = .1
+        self.render_compare_btn.size_hint_y = .2
 
         Clock.schedule_interval(self.update_log_info, 0.1)
-        self.Info = Label(text = "info",color = "yellow")
-        self.Info.size_hint_y = .1
+
+        self.Info = TextInput(text = "info")
+        self.Info.size_hint=(1, None)
+        self.Info.background_color = "black"
+        self.Info.foreground_color = [0,255,0,1]
+        self.Info.halign = "center"
         
         self.mB.add_widget(self.ch_ipath_btn)
         self.mB.add_widget(self.chosen_path)
